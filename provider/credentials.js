@@ -18,7 +18,7 @@
  */
 "use strict";
 
-const ENV_PARAMS = ["CLOUDFLARE_AUTH_KEY", "CLOUDFLARE_EMAIL"];
+const ENV_PARAMS = ["CLOUDFLARE_AUTH_KEY", "CLOUDFLARE_AUTH_EMAIL"];
 const REQUIRED_CREDENTIALS = ENV_PARAMS.map(s => {
   // ["auth_key", "email"]
   const a = s.split("CLOUDFLARE_")[1];

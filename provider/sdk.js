@@ -19,7 +19,7 @@
 const cfApiCall = async ({ url, method, contentType = null, body = null }) => {
   let options = {
     headers: {
-      "X-Auth-Email": process.env.CLOUDFLARE_EMAIL,
+      "X-Auth-Email": process.env.CLOUDFLARE_AUTH_EMAIL,
       "X-Auth-Key": process.env.CLOUDFLARE_AUTH_KEY
     },
     method: method
@@ -30,7 +30,6 @@ const cfApiCall = async ({ url, method, contentType = null, body = null }) => {
   if (body) {
     options["body"] = body;
   }
-
   return await fetch(url, options).then(responseBody => responseBody.json());
 };
 
@@ -45,6 +44,7 @@ const invokeApiCall = async ({
     method,
     headers
   };
+
   if (contentType) {
     options["headers"]["Content-Type"] = contentType;
   }
