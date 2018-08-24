@@ -1,0 +1,39 @@
+{
+  "name": "serverless-cloudflare-workers",
+  "version": "1.0.0",
+  "description": "serverless cloudflare workers ",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "fmt": "eslint --fix ./deploy ./invoke ./provider ./remove ./index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/serverless/serverless-cloudflare-workers.git"
+  },
+  "keywords": [
+    "serverless",
+    "serverless",
+    "framework",
+    "serverless",
+    "applications",
+    "workers",
+    "cloudflare"
+  ],
+  "dependencies": {
+    "bluebird": "^3.4.7",
+    "node-fetch": "^2.2.0"
+  },
+  "author": "serverless.com",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/serverless/serverless-cloudflare-workers/issues"
+  },
+  "homepage": "https://github.com/serverless/serverless-cloudflare-workers#readme",
+  "devDependencies": {
+    "eslint": "^5.3.0",
+    "eslint-config-prettier": "^2.9.0",
+    "eslint-plugin-prettier": "^2.6.2",
+    "prettier": "^1.14.0"
+  }
+}
