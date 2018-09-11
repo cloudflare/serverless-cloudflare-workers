@@ -29,7 +29,7 @@ class CloudflareProvider {
     this.serverless = serverless;
     this.provider = this;
     this.serverless.setProvider(providerName, this);
-    this.config = serverless.service.serviceObject.config;
+    this.config = this.serverless.service.provider.config || serverless.service.serviceObject.config;
   }
 }
 
