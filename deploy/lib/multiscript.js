@@ -19,6 +19,8 @@
 const sdk = require("../../provider/sdk");
 const { generateCode } = require("./workerScript");
 const BB = require("bluebird");
+const webpack = require("../../utils/webpack");
+const ms = require("../../shared/multiscript");
 
 module.exports = {
   async multiScriptWorkerAPI(scriptContents, scriptName) {
@@ -41,35 +43,26 @@ module.exports = {
     });
   },
 
-  async getRoutesMultiScript(zoneId) {
-    return await sdk.cfApiCall({
-      url: `https://api.cloudflare.com/client/v4/zones/${zoneId}/workers/routes`,
-      method: `GET`,
-      contentType: `application/javascript`
-    });
-  },
   async multiScriptDeploy(funcObj) {
-    return await BB.bind(this).then(async () => {
-      const { workers: scriptOptions, zoneId } = this.provider.config;
+    return BB.bind(this)
+    .then(async () => {
 
-      if (scriptOptions === undefined || scriptOptions === null) {
-        throw new Error(
-          "Incorrect template being used for a MultiScript user "
-        );
-      }
+      const { zoneId } = this.provider.config;
 
       let workerScriptResponse;
       let routesResponse = [];
+
       const scriptContents = generateCode(funcObj);
 
-      const { worker: scriptName } = funcObj;
+      const { name: scriptName } = funcObj;
 
       const response = await this.multiScriptWorkerAPI(
         scriptContents,
         scriptName
       );
+
       workerScriptResponse = response;
-      const allRoutes = scriptOptions[scriptName]["routes"];
+      const allRoutes = ms.getRoutes(funcObj.events);
 
       for (const pattern of allRoutes) {
         this.serverless.cli.log(`deploying route: ${pattern} `);
@@ -89,17 +82,25 @@ module.exports = {
   },
 
   async multiScriptDeployAll() {
-    const { workers: scriptOptions } = this.provider.config;
-    if (scriptOptions === undefined || scriptOptions === null) {
+
+    const functions = this.serverless.service.getAllFunctions();
+
+    if (typeof(functions) === 'undefined' || functions === null) {
       throw new Error("Incorrect template being used for a MultiScript user ");
     }
-    const scriptNames = Object.keys(scriptOptions);
+
     let workerResponse = [];
     let routesResponse = [];
 
-    for (const scriptName of scriptNames) {
+    for (const scriptName of functions) {
       const functionObject = this.getFunctionObjectFromScriptName(scriptName);
+
+      if (functionObject.webpack) {
+        await webpack.pack(this.serverless, functionObject);
+      }
+
       this.serverless.cli.log(`deploying script: ${scriptName}`);
+
       const {
         workerScriptResponse,
         routesResponse: rResponse
@@ -107,6 +108,7 @@ module.exports = {
       workerResponse.push(workerScriptResponse);
       routesResponse.push(rResponse);
     }
+
     return {
       workerScriptResponse: workerResponse,
       routesResponse,

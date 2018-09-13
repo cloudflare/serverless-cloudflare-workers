@@ -19,6 +19,7 @@
 const sdk = require("../../provider/sdk");
 const { generateCode } = require("./workerScript");
 const BB = require("bluebird");
+const webpack = require("../../utils/webpack");
 
 module.exports = {
   async singleServeWorkerAPI(scriptContents) {
@@ -47,17 +48,27 @@ module.exports = {
       method: `GET`
     });
   },
+
+  collectRoutes(events) {
+    return events.map(event => {
+      if (event.http) {
+        return event.http.url;
+      }
+    })
+  },
+
   async deploySingleScript(funcObj) {
     return await BB.bind(this).then(async () => {
-      //const { routes: singleScriptRoutes, zoneId } = this.provider.config;
+      const { zoneId } = this.provider.config;
 
-      const { workers: scriptOptions, zoneId } = this.provider.config;
-
-      const { worker: scriptName } = funcObj;
-
-      const singleScriptRoutes = scriptOptions[scriptName]["routes"];
+      const singleScriptRoutes = this.collectRoutes(funcObj.events);
       let workerScriptResponse;
       let routesResponse = [];
+
+      if (funcObj.webpack) {
+        await webpack.pack(this.serverless, funcObj);
+      }
+
       const scriptContents = generateCode(funcObj);
 
       const response = await this.singleServeWorkerAPI(scriptContents);

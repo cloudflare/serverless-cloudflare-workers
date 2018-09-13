@@ -16,18 +16,22 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-const path = require("path");
-const fs = require("fs");
-const generateCode = thefunctionObject => {
-  let { script } = thefunctionObject;
-
-  if (path.extname(script) != ".js") {
-    script = script.concat(".js");
-  }
-  
-  return fs.readFileSync(script).toString();
-};
+const sdk = require("../provider/sdk");
 
 module.exports = {
-  generateCode
-};
+  async getRoutesMultiScript(zoneId) {
+    return await sdk.cfApiCall({
+      url: `https://api.cloudflare.com/client/v4/zones/${zoneId}/workers/routes`,
+      method: `GET`,
+      contentType: `application/javascript`
+    });
+  },
+
+  getRoutes(events) {
+    return events.map(function(event) {
+      if (event.http) {
+        return event.http.url;
+      }
+    });
+  }
+}

@@ -16,18 +16,44 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-const path = require("path");
-const fs = require("fs");
-const generateCode = thefunctionObject => {
-  let { script } = thefunctionObject;
-
-  if (path.extname(script) != ".js") {
-    script = script.concat(".js");
-  }
-  
-  return fs.readFileSync(script).toString();
-};
+const ms = require('./multiscript');
 
 module.exports = {
-  generateCode
-};
+  /**
+   * @param {*} serverless
+   * @param {*} provider
+   */
+  async checkIfDuplicateRoutes(serverless, provider) {
+    // for any worker that we are uploading, we check its routes in the yml file and
+    // check if there are exact same routes in our cloudflare account which point to
+    // different script name
+    if (typeof(provider) == 'undefined' || !provider.config) {
+      throw("No config found.")
+    }
+
+    const { zoneId } = provider.config;
+    const response = await ms.getRoutesMultiScript(zoneId);
+    const { result } = response;
+      
+    // check for all the workers we are uploading
+    const foundDuplicate = result.some(filters => {
+      const { pattern, script } = filters;
+
+      const functions = serverless.service.getAllFunctions();
+      for (const scriptName of functions) {
+        const functionObject = serverless.service.getFunction(scriptName);
+        const routes = functionObject.events.map(function(event) {
+          if (event.http) {
+            return event.http.url;
+          }
+        })
+        
+        return routes.some(r => {
+          return r === pattern && scriptName !== script;
+        });
+      }
+    });
+
+    return foundDuplicate;
+  }
+}
