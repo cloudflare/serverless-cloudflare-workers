@@ -16,12 +16,10 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-const path = require('path');
 const sdk = require("../../provider/sdk");
 const { generateCode } = require("./workerScript");
 const BB = require("bluebird");
-const webpack = BB.promisify(require("webpack"));
-const fse = require('fs-extra');
+const webpack = require("../../utils/webpack");
 
 module.exports = {
   async multiScriptWorkerAPI(scriptContents, scriptName) {
@@ -105,25 +103,7 @@ module.exports = {
       const functionObject = this.getFunctionObjectFromScriptName(scriptName);
 
       if (this.provider.config.webpack) {
-
-        this.serverless.cli.log(`bundling: ${functionObject.script}`);
-        let outputPath = path.join(this.serverless.config.servicePath, functionObject.script);
-
-        let config = {
-          entry: {
-            out: outputPath
-          },
-          output: {
-            filename: `${functionObject.script}.js`,
-            path: path.join(this.serverless.config.servicePath, 'dist'),
-          },
-          devtool: 'cheap-module-source-map',
-          target: 'web'
-        }
-        await webpack(config);
-        
-        functionObject.script = `dist/${functionObject.script}`;
-        fse.removeSync(outputPath);
+        await webpack.pack(this.serverless, functionObject);
       }
 
       this.serverless.cli.log(`deploying script: ${scriptName}`);
