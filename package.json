@@ -22,7 +22,9 @@
   ],
   "dependencies": {
     "bluebird": "^3.4.7",
-    "node-fetch": "^2.2.0"
+    "fs-extra": "^7.0.1",
+    "node-fetch": "^2.2.0",
+    "webpack": "^4.25.1"
   },
   "author": "serverless.com",
   "license": "MIT",

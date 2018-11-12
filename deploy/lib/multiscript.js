@@ -16,9 +16,12 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+const path = require('path');
 const sdk = require("../../provider/sdk");
 const { generateCode } = require("./workerScript");
 const BB = require("bluebird");
+const webpack = BB.promisify(require("webpack"));
+const fse = require('fs-extra');
 
 module.exports = {
   async multiScriptWorkerAPI(scriptContents, scriptName) {
@@ -89,6 +92,7 @@ module.exports = {
   },
 
   async multiScriptDeployAll() {
+        
     const { workers: scriptOptions } = this.provider.config;
     if (scriptOptions === undefined || scriptOptions === null) {
       throw new Error("Incorrect template being used for a MultiScript user ");
@@ -99,6 +103,29 @@ module.exports = {
 
     for (const scriptName of scriptNames) {
       const functionObject = this.getFunctionObjectFromScriptName(scriptName);
+
+      if (this.provider.config.webpack) {
+
+        this.serverless.cli.log(`bundling: ${functionObject.script}`);
+        let outputPath = path.join(this.serverless.config.servicePath, functionObject.script);
+
+        let config = {
+          entry: {
+            out: outputPath
+          },
+          output: {
+            filename: `${functionObject.script}.js`,
+            path: path.join(this.serverless.config.servicePath, 'dist'),
+          },
+          devtool: 'cheap-module-source-map',
+          target: 'web'
+        }
+        await webpack(config);
+        
+        functionObject.script = `dist/${functionObject.script}`;
+        fse.removeSync(outputPath);
+      }
+
       this.serverless.cli.log(`deploying script: ${scriptName}`);
       const {
         workerScriptResponse,
@@ -107,6 +134,7 @@ module.exports = {
       workerResponse.push(workerScriptResponse);
       routesResponse.push(rResponse);
     }
+
     return {
       workerScriptResponse: workerResponse,
       routesResponse,
