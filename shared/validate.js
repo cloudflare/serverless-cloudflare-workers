@@ -44,59 +44,18 @@ module.exports = {
       return BB.reject("Use appropriate function names");
     }
   },
-  async checkIfDuplicateRoutes(isMultiScript) {
-    // for any worker that we are uploading, we check its routes in the yml file and
-    // check if there are exact same routes in our cloudflare account which point to
-    // different script name
-    if (!isMultiScript) return false;
-    const { zoneId } = this.provider.config;
-    const response = await this.getRoutesMultiScript(zoneId);
-    const { result } = response;
 
-    if (this.options.function !== undefined || this.options.f !== undefined) {
-      // specific worker
-      const { worker: workerName } = this.getFunctionObject();
-      const { workers } = this.provider.config;
-      const { routes } = workers[workerName];
-
-      const foundDuplicate = result.some(filters => {
-        const { pattern, script } = filters;
-        return routes.some(r => {
-          return r === pattern && workerName !== script;
-        });
-      });
-      if (foundDuplicate) {
-        return true;
-      }
-    } else {
-      // check for all the workers we are uploading
-      const foundDuplicate = result.some(filters => {
-        const { pattern, script } = filters;
-        const { workers } = this.provider.config;
-        return Object.keys(workers).some(scriptName => {
-          const { routes } = workers[scriptName];
-          return routes.some(r => {
-            return r === pattern && scriptName !== script;
-          });
-        });
-      });
-
-      if (foundDuplicate) {
-        return true;
-      }
-    }
-    return false;
-  },
   isValidScriptName(sname) {
-    const re = new RegExp("^[a-z0-9_][a-z0-9-_]*$");
+    const re = new RegExp("^[a-z0-9_][A-Za-z0-9-_]*$");
     if (re.exec(sname)) {
       return true;
     }
     return false;
   },
+  
   getInvalidScriptNames() {
-    const { workers } = this.provider.config;
-    const notValidScriptNames = Object.keys(workers).find(scriptName => {
+    const functions = this.serverless.service.getAllFunctions();
+    const notValidScriptNames = functions.find(scriptName => {
       return !this.isValidScriptName(scriptName);
     });
     return notValidScriptNames;

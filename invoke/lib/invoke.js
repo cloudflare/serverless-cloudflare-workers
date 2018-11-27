@@ -25,7 +25,8 @@ module.exports = {
     events.forEach(event => {
       const { http } = event;
       Object.keys(http).forEach(httpEvent => {
-        if (httpEvent == "url") {
+        if (httpEvent === "url") {
+          console.log(http)
           let urlString = http[httpEvent];
           if (!urlString.startsWith("http://")) {
             urlString = "https://" + urlString;

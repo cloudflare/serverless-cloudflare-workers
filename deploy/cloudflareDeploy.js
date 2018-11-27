@@ -18,13 +18,13 @@
  */
 const BB = require("bluebird");
 const ms = require("./lib/multiscript");
-
 const ss = require("./lib/singlescript");
 
 const accountType = require("../shared/accountType");
 const logs = require("./lib/logResponse");
 const utils = require("../utils");
 const validate = require("../shared/validate");
+const duplicate = require("../shared/duplicate");
 
 class CloudflareDeploy {
   constructor(serverless, options) {
@@ -39,18 +39,18 @@ class CloudflareDeploy {
         BB.bind(this)
           .then(this.checkAccountType)
           .then(async isMultiScript => {
-            const isDuplicateRoutesPresent = await this.checkIfDuplicateRoutes(
-              isMultiScript
-            );
-            if (isDuplicateRoutesPresent) {
+            
+            if (isMultiScript && await duplicate.checkIfDuplicateRoutes(this.serverless, this.provider)) {
               return BB.reject("Duplicate routes pointing to different script");
             }
+            
             if (this.getInvalidScriptNames()) {
               console.log(this.getInvalidScriptNames());
               return BB.reject(
                 "Worker names can contain lowercase letters, numbers, underscores, and dashes. They cannot start with dashes."
               );
             }
+            
             if (isMultiScript) {
               return this.multiScriptDeployAll();
             } else {
