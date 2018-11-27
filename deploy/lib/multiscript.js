@@ -23,60 +23,19 @@ const webpack = require("../../utils/webpack");
 const ms = require("../../shared/multiscript");
 
 module.exports = {
-  async multiScriptWorkerAPI(scriptContents, scriptName) {
-    const { accountId } = this.provider.config;
-    return await sdk.cfApiCall({
-      url: `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts/${scriptName}`,
-      method: `PUT`,
-      contentType: `application/javascript`,
-      body: scriptContents
-    });
-  },
-
-  async multiScriptRoutesAPI(pattern, scriptName, zoneId) {
-    const payload = { pattern, script: scriptName };
-    return await sdk.cfApiCall({
-      url: `https://api.cloudflare.com/client/v4/zones/${zoneId}/workers/routes`,
-      method: `POST`,
-      contentType: `application/json`,
-      body: JSON.stringify(payload)
-    });
-  },
-
   async multiScriptDeploy(funcObj) {
     return BB.bind(this)
     .then(async () => {
 
-      const { zoneId } = this.provider.config;
-
-      let workerScriptResponse;
-      let routesResponse = [];
-
-      const scriptContents = generateCode(funcObj);
-
-      const { name: scriptName } = funcObj;
-
-      const response = await this.multiScriptWorkerAPI(
-        scriptContents,
-        scriptName
-      );
-
-      workerScriptResponse = response;
-      const allRoutes = ms.getRoutes(funcObj.events);
-
-      for (const pattern of allRoutes) {
-        this.serverless.cli.log(`deploying route: ${pattern} `);
-        const rResponse = await this.multiScriptRoutesAPI(
-          pattern,
-          scriptName,
-          zoneId
-        );
-        routesResponse.push(rResponse);
-      }
+      // deploy script, routes, and namespaces
+      const namespaceResponse = await ms.deployNamespaces(this.provider.config.accountId, funcObj);
+      const workerScriptResponse = await ms.deployWorker(this.provider.config.accountId, funcObj);
+      const routesResponse = await ms.deployRoutes(this.provider.config.zoneId, funcObj);
 
       return {
         workerScriptResponse,
-        routesResponse
+        routesResponse,
+        namespaceResponse
       };
     });
   },
@@ -91,6 +50,7 @@ module.exports = {
 
     let workerResponse = [];
     let routesResponse = [];
+    let namespaceResponses = [];
 
     for (const scriptName of functions) {
       const functionObject = this.getFunctionObjectFromScriptName(scriptName);
@@ -103,15 +63,19 @@ module.exports = {
 
       const {
         workerScriptResponse,
-        routesResponse: rResponse
+        routesResponse: rResponse,
+        namespaceResponse,
       } = await this.multiScriptDeploy(functionObject);
+
       workerResponse.push(workerScriptResponse);
       routesResponse.push(rResponse);
+      namespaceResponses.push(namespaceResponse);
     }
 
     return {
       workerScriptResponse: workerResponse,
       routesResponse,
+      namespaceResponses,
       isMultiScript: true
     };
   }

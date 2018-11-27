@@ -17,6 +17,8 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 const sdk = require("../provider/sdk");
+const resources = require("./resources");
+const { generateCode } = require("../deploy/lib/workerScript");
 
 module.exports = {
   async getRoutesMultiScript(zoneId) {
@@ -33,5 +35,67 @@ module.exports = {
         return event.http.url;
       }
     });
+  },
+
+  async multiScriptRoutesAPI(pattern, scriptName, zoneId) {
+    const payload = { pattern, script: scriptName };
+    return await sdk.cfApiCall({
+      url: `/zones/${zoneId}/workers/routes`,
+      method: `POST`,
+      contentType: `application/json`,
+      body: JSON.stringify(payload)
+    });
+  },
+
+  async multiScriptWorkerAPI(accountId, scriptContents, scriptName) {
+    return await sdk.cfApiCall({
+      url: `/accounts/${accountId}/workers/scripts/${scriptName}`,
+      method: `PUT`,
+      contentType: `application/javascript`,
+      body: scriptContents
+    });
+  },
+
+  /**
+   * Deploys the Worker Script in functionObject from the yml file
+   * @param {*} accountId 
+   * @param {*} functionObject 
+   */
+  async deployWorker(accountId, functionObject) {
+    const contents = generateCode(functionObject);
+    return await this.multiScriptWorkerAPI(accountId, contents, functionObject.name)
+  },
+
+  /**
+   * Deploys the namespaces in function Object listed under resources->storage
+   * @param {*} accountId 
+   * @param {*} functionObject 
+   */
+  async deployNamespaces(accountId, functionObject) {
+    let responses = [];
+    
+    if (functionObject.resources && functionObject.resources.storage) {
+      for (const store of functionObject.resources.storage) {
+        responses.push(await resources.createNamespace(accountId, store.namespace));
+      }
+    }
+    
+    return responses;
+  },
+
+  /**
+   * Deploys all routes found in functionObject.events
+   * @param {*} zoneId 
+   * @param {*} functionObject 
+   */
+  async deployRoutes(zoneId, functionObject) {
+    const allRoutes = this.getRoutes(functionObject.events);
+    let routeResponses = [];
+    for (const pattern of allRoutes) {
+      const response = await this.multiScriptRoutesAPI(pattern, functionObject.name, zoneId);
+      routeResponses.push(response)
+    }
+
+    return routeResponses;
   }
 }

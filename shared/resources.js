@@ -16,18 +16,43 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+const sdk = require("../provider/sdk");
+
+function isDuplicateNamespaceError(result) {
+  return (result && result.success == false && result.errors.length == 1 && result.errors[0].code == 10014);
+}
+
 module.exports = {
-  logDeployFunctionResponse({ workerScriptResponse, routesResponse }) {
-    this.parseWorkerResponse(this.serverless.cli, workerScriptResponse);
-    this.parseRoutesReponse(this.serverless.cli, routesResponse);
+  async createNamespace(accountId, name) {
+    if (!accountId) {
+      throw("You must provide an account ID");
+    }
+
+    let result = await sdk.cfApiCall({
+      url: `/accounts/${accountId}/storage/kv/namespaces`,
+      method: `POST`,
+      contentType: `application/json`,
+      body: JSON.stringify({
+        title: name
+      })
+    });
+
+    if (isDuplicateNamespaceError(result)) {
+      result.success = true;
+    }
+
+    return result;
   },
-  logDeployResponse({ workerScriptResponse, routesResponse, namespaceResponses, isMultiScript }) {
-    if (isMultiScript) {
-      this.aggregateWorkerResponse(this.serverless.cli, workerScriptResponse);
-      this.aggregateRoutesResponse(this.serverless.cli, routesResponse);
+
+  async deploy(serverless, config) {
+    const resources = serverless.service.resources;
+
+    if (resources.storage) {
+      for (let space in storage) {
+        await this.createNamespace(config.accountId, space.namespace);
+      }
     } else {
-      this.parseWorkerResponse(this.serverless.cli, workerScriptResponse);
-      this.parseRoutesReponse(this.serverless.cli, routesResponse);
+      return;
     }
   }
-};
+}
