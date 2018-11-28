@@ -19,7 +19,6 @@
 const BB = require("bluebird");
 const ms = require("./lib/multiscript");
 const ss = require("./lib/singlescript");
-const resources = require("../shared/resources");
 
 const accountType = require("../shared/accountType");
 const logs = require("./lib/logResponse");

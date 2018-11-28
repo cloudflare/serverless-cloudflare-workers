@@ -16,8 +16,6 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-const sdk = require("../../provider/sdk");
-const { generateCode } = require("./workerScript");
 const BB = require("bluebird");
 const webpack = require("../../utils/webpack");
 const ms = require("../../shared/multiscript");

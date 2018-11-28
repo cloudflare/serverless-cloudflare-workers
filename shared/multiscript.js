@@ -17,7 +17,7 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 const sdk = require("../provider/sdk");
-const resources = require("./resources");
+const cf = require("cloudflare-workers-toolkit");
 const { generateCode } = require("../deploy/lib/workerScript");
 
 module.exports = {
@@ -47,15 +47,6 @@ module.exports = {
     });
   },
 
-  async multiScriptWorkerAPI(accountId, scriptContents, scriptName) {
-    return await sdk.cfApiCall({
-      url: `/accounts/${accountId}/workers/scripts/${scriptName}`,
-      method: `PUT`,
-      contentType: `application/javascript`,
-      body: scriptContents
-    });
-  },
-
   /**
    * Deploys the Worker Script in functionObject from the yml file
    * @param {*} accountId 
@@ -63,7 +54,7 @@ module.exports = {
    */
   async deployWorker(accountId, functionObject) {
     const contents = generateCode(functionObject);
-    return await this.multiScriptWorkerAPI(accountId, contents, functionObject.name)
+    return await cf.workers.deploy({accountId, name: functionObject.name, script: contents, bindings: []})
   },
 
   /**
@@ -76,7 +67,11 @@ module.exports = {
     
     if (functionObject.resources && functionObject.resources.storage) {
       for (const store of functionObject.resources.storage) {
-        responses.push(await resources.createNamespace(accountId, store.namespace));
+        let result = await cf.storage.createNamespace(accountId, store.namespace);
+        if (cf.storage.isDuplicateNamespaceError(result)) {
+          result.success = true;
+        }
+        responses.push(result);
       }
     }
     
