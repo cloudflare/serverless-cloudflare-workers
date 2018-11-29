@@ -1,10 +1,10 @@
 {
   "name": "serverless-cloudflare-workers",
-  "version": "0.1.1",
+  "version": "1.0.1",
   "description": "serverless cloudflare workers ",
   "main": "index.js",
   "scripts": {
-    "test": "nyc mocha --recursive",
+    "test": "nyc --reporter=html --reporter=text mocha --recursive",
     "fmt": "eslint --fix ./deploy ./invoke ./provider ./remove ./index.js"
   },
   "repository": {
@@ -22,7 +22,10 @@
   ],
   "dependencies": {
     "bluebird": "^3.4.7",
+    "cloudflare-workers-toolkit": "0.0.4",
+    "form-data": "^2.3.3",
     "fs-extra": "^7.0.1",
+    "node-fetch": "^2.3.0",
     "webpack": "^4.25.1"
   },
   "author": "serverless.com",
@@ -36,9 +39,7 @@
     "eslint-config-prettier": "^2.9.0",
     "eslint-plugin-prettier": "^2.6.2",
     "mocha": "^5.2.0",
-    "node-fetch": "^2.3.0",
     "nyc": "^13.1.0",
-    "prettier": "^1.14.0",
     "proxyquire": "^2.1.0"
   }
 }
