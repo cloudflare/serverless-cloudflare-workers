@@ -17,6 +17,7 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 const ms = require('./multiscript');
+const cf = require("cloudflare-workers-toolkit");
 
 module.exports = {
   /**
@@ -32,7 +33,7 @@ module.exports = {
     }
 
     const { zoneId } = provider.config;
-    const response = await ms.getRoutesMultiScript(zoneId);
+    const response = await cf.routes.getRoutes({zoneId});
     const { result } = response;
       
     // check for all the workers we are uploading

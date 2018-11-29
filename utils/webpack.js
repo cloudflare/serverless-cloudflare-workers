@@ -18,7 +18,8 @@ module.exports = {
         path: path.join(serverless.config.servicePath, 'dist'),
       },
       devtool: 'cheap-module-source-map',
-      target: 'web'
+      target: 'webworker',
+      mode: 'production'
     }
     await webpack(config);
     

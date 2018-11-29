@@ -52,7 +52,7 @@ class CloudflareDeploy {
             }
             
             if (isMultiScript) {
-              return this.multiScriptDeployAll();
+              return this.multiScriptDeployAll()
             } else {
               const functionObject = this.getFunctionObjectForSingleScript();
               return this.deploySingleScript(functionObject);

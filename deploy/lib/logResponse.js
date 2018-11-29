@@ -21,7 +21,7 @@ module.exports = {
     this.parseWorkerResponse(this.serverless.cli, workerScriptResponse);
     this.parseRoutesReponse(this.serverless.cli, routesResponse);
   },
-  logDeployResponse({ workerScriptResponse, routesResponse, isMultiScript }) {
+  logDeployResponse({ workerScriptResponse, routesResponse, namespaceResponses, isMultiScript }) {
     if (isMultiScript) {
       this.aggregateWorkerResponse(this.serverless.cli, workerScriptResponse);
       this.aggregateRoutesResponse(this.serverless.cli, routesResponse);

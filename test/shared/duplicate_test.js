@@ -2,14 +2,16 @@ const proxyquire =  require('proxyquire')
 const assert = require('assert');
 
 const validate = proxyquire("../../shared/duplicate", {
-  './multiscript': {
-    'getRoutesMultiScript': function() {
-      return Promise.resolve({
-        "result": [{
-          pattern: "route1",
-          script: "existing"
-        }]
-      })
+  'cloudflare-workers-toolkit': {
+    "routes": {
+      'getRoutes': function() {
+        return Promise.resolve({
+          "result": [{
+            pattern: "route1",
+            script: "existing"
+          }]
+        })
+      }
     }
   }
 });
