@@ -19,7 +19,7 @@ module.exports = {
       },
       devtool: 'cheap-module-source-map',
       target: 'webworker',
-      mode: 'development'
+      mode: 'production'
     }
     await webpack(config);
     
