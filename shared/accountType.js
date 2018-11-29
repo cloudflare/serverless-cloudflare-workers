@@ -18,13 +18,16 @@
  */
 const BB = require("bluebird");
 const credentials = require("../provider/credentials");
-const { cfApiCall } = require("../provider/sdk");
+const cf = require("cloudflare-workers-toolkit");
 
 module.exports = {
   async checkAccountType() {
+    const zoneId = this.provider.config.zoneId;
     return await BB.bind(this)
       .then(this.checkAllEnvironmentVariables)
-      .then(this.makeAPICall)
+      .then(function() {
+        return cf.workers.getSettings({zoneId});
+      })
       .then(this.checkIfMultiScript);
   },
 
@@ -38,16 +41,6 @@ module.exports = {
         );
       }
     });
-  },
-  async makeAPICall() {
-    const { zoneId } = this.provider.config;
-
-    const response = await cfApiCall({
-      url: `https://api.cloudflare.com/client/v4/zones/${zoneId}/workers/settings`,
-      method: "GET"
-    });
-
-    return response;
   },
   checkIfMultiScript({ success, errors, result }) {
     if (!success) {

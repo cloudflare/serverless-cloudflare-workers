@@ -66,7 +66,7 @@ module.exports = {
     return status;
   },
 
-  parseRoutesReponse(serverlessConsole, apiResponse) {
+  parseRoutesResponse(serverlessConsole, apiResponse) {
     let status = [];
     apiResponse.forEach(resp => {
       let {
@@ -96,7 +96,7 @@ module.exports = {
     let status = [];
 
     apiResponse.forEach(resp => {
-      status.push(this.parseRoutesReponse(serverlessConsole, resp));
+      status.push(this.parseRoutesResponse(serverlessConsole, resp));
     });
 
     return status;
