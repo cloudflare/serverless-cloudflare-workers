@@ -16,19 +16,10 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-const sdk = require("../provider/sdk");
 const cf = require("cloudflare-workers-toolkit");
 const { generateCode } = require("../deploy/lib/workerScript");
 
 module.exports = {
-  async getRoutesMultiScript(zoneId) {
-    return await sdk.cfApiCall({
-      url: `https://api.cloudflare.com/client/v4/zones/${zoneId}/workers/routes`,
-      method: `GET`,
-      contentType: `application/javascript`
-    });
-  },
-
   getRoutes(events) {
     return events.map(function(event) {
       if (event.http) {
@@ -37,14 +28,26 @@ module.exports = {
     });
   },
 
-  async multiScriptRoutesAPI(pattern, scriptName, zoneId) {
-    const payload = { pattern, script: scriptName };
-    return await sdk.cfApiCall({
-      url: `/zones/${zoneId}/workers/routes`,
-      method: `POST`,
-      contentType: `application/json`,
-      body: JSON.stringify(payload)
-    });
+  /**
+   * Parses the resources config to build bindings for the worker. Has to get namespaces for the CF id
+   * @param {*} resources 
+   */
+  async getBindings(resources) {
+    if (resources && resources.storage) { // do nothing if there is no storage config
+      const namespaces = await cf.storage.getNamespaces();
+
+      return resources.storage.map(function(store) {
+        return {
+          name: store.variable,
+          type: 'kv_namespace',
+          namespace_id: namespaces.find(function(ns) {
+            return ns.title === store.namespace;
+          }).id
+        }
+      })
+    }
+
+    return [];
   },
 
   /**
@@ -53,8 +56,17 @@ module.exports = {
    * @param {*} functionObject 
    */
   async deployWorker(accountId, functionObject) {
+    cf.setAccountId(accountId);
+
     const contents = generateCode(functionObject);
-    return await cf.workers.deploy({accountId, name: functionObject.name, script: contents, bindings: []})
+    let bindings = await this.getBindings(functionObject.resources);
+
+    return await cf.workers.deploy({
+      accountId,
+      name: functionObject.name,
+      script: contents,
+      bindings
+    })
   },
 
   /**
@@ -67,7 +79,10 @@ module.exports = {
     
     if (functionObject.resources && functionObject.resources.storage) {
       for (const store of functionObject.resources.storage) {
-        let result = await cf.storage.createNamespace(accountId, store.namespace);
+        let result = await cf.storage.createNamespace({
+          accountId,
+          name: store.namespace
+        });
         if (cf.storage.isDuplicateNamespaceError(result)) {
           result.success = true;
         }
@@ -87,7 +102,7 @@ module.exports = {
     const allRoutes = this.getRoutes(functionObject.events);
     let routeResponses = [];
     for (const pattern of allRoutes) {
-      const response = await this.multiScriptRoutesAPI(pattern, functionObject.name, zoneId);
+      const response = await cf.routes.deploy({path: pattern, scriptName: functionObject.name, zoneId});
       routeResponses.push(response)
     }
 
