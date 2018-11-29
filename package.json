@@ -1,6 +1,6 @@
 {
   "name": "serverless-cloudflare-workers",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "serverless cloudflare workers ",
   "main": "index.js",
   "scripts": {
