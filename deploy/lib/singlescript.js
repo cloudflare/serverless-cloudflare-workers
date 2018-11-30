@@ -20,17 +20,9 @@ const sdk = require("../../provider/sdk");
 const { generateCode } = require("./workerScript");
 const BB = require("bluebird");
 const webpack = require("../../utils/webpack");
+const cf = require("cloudflare-workers-toolkit");
 
 module.exports = {
-  async singleServeWorkerAPI(scriptContents) {
-    const { zoneId } = this.provider.config;
-    return await sdk.cfApiCall({
-      url: `https://api.cloudflare.com/client/v4/zones/${zoneId}/workers/script`,
-      method: `PUT`,
-      contentType: `application/javascript`,
-      body: scriptContents
-    });
-  },
 
   async singleServeRoutesAPI({ pattern, zoneId }) {
     const payload = { pattern, enabled: true };
@@ -71,7 +63,11 @@ module.exports = {
 
       const scriptContents = generateCode(funcObj);
 
-      const response = await this.singleServeWorkerAPI(scriptContents);
+      const response = await cf.workers.deploy({
+        zoneId: this.provider.config.zoneId,
+        script: scriptContents
+      })
+      
       workerScriptResponse = response;
 
       for (const pattern of singleScriptRoutes) {

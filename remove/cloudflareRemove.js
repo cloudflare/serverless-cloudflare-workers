@@ -17,10 +17,9 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 const BB = require("bluebird");
-const ms = require("./lib/multiscript");
 const ss = require("./lib/singlescript");
-const sdk = require("../provider/sdk");
 const accountType = require("../shared/accountType");
+const cf = require("cloudflare-workers-toolkit");
 
 class CloudflareRemove {
   constructor(serverless, options) {
@@ -54,10 +53,7 @@ class CloudflareRemove {
       }
       const scriptNames = Object.keys(scriptOptions);
 
-      const { success, result, errors } = await sdk.cfApiCall({
-        url: `https://api.cloudflare.com/client/v4/zones/${zoneId}/workers/routes`,
-        contentType: `application/javascript`
-      });
+      const { success, result, errors } = await cf.routes.getRoutes({zoneId});
       let allRoutes = {};
       if (success) {
         result.forEach(r => {
@@ -74,13 +70,13 @@ class CloudflareRemove {
       const promises = [];
       scriptNames.forEach(scriptName => {
         allRoutes[scriptName].forEach(routeId => {
-          promises.push(ms.removeRoute(zoneId, routeId));
+          promises.push(cf.routes.remove({zoneId, routeId}));
         });
-        promises.push(ms.removeScript(accountId, scriptName));
+        promises.push(cf.workers.removeScript({accountId, name: scriptName}));
       });
       await Promise.all(promises);
     } else {
-      await Promise.all([ss.removeScript(accountId), ss.removeRoutes(zoneId)]);
+      await Promise.all([cf.workers.remove({zoneId: this.provider.config.zoneId}), ss.removeRoutes(zoneId)]);
     }
     this.serverless.cli.log("removed routes + scripts");
     return true;
