@@ -20,17 +20,9 @@ const sdk = require("../../provider/sdk");
 const { generateCode } = require("./workerScript");
 const BB = require("bluebird");
 const webpack = require("../../utils/webpack");
+const cf = require("cloudflare-workers-toolkit");
 
 module.exports = {
-  async singleServeWorkerAPI(scriptContents) {
-    const { zoneId } = this.provider.config;
-    return await sdk.cfApiCall({
-      url: `https://api.cloudflare.com/client/v4/zones/${zoneId}/workers/script`,
-      method: `PUT`,
-      contentType: `application/javascript`,
-      body: scriptContents
-    });
-  },
 
   async singleServeRoutesAPI({ pattern, zoneId }) {
     const payload = { pattern, enabled: true };
@@ -57,21 +49,25 @@ module.exports = {
     })
   },
 
-  async deploySingleScript(funcObj) {
+  async deploySingleScript(functionObject) {
     return await BB.bind(this).then(async () => {
       const { zoneId } = this.provider.config;
 
-      const singleScriptRoutes = this.collectRoutes(funcObj.events);
+      const singleScriptRoutes = this.collectRoutes(functionObject.events);
       let workerScriptResponse;
       let routesResponse = [];
 
-      if (funcObj.webpack) {
-        await webpack.pack(this.serverless, funcObj);
+      if (functionObject.webpack) {
+        await webpack.pack(this.serverless, functionObject);
       }
 
-      const scriptContents = generateCode(funcObj);
+      const scriptContents = generateCode(functionObject);
 
-      const response = await this.singleServeWorkerAPI(scriptContents);
+      const response = await cf.workers.deploy({
+        zoneId: this.provider.config.zoneId,
+        script: scriptContents
+      })
+      
       workerScriptResponse = response;
 
       for (const pattern of singleScriptRoutes) {

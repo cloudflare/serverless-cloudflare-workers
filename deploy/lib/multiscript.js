@@ -21,14 +21,18 @@ const webpack = require("../../utils/webpack");
 const ms = require("../../shared/multiscript");
 
 module.exports = {
-  async multiScriptDeploy(funcObj) {
+  async multiScriptDeploy(functionObject) {
     return BB.bind(this)
     .then(async () => {
 
+      if (functionObject.webpack) {
+        await webpack.pack(this.serverless, functionObject);
+      }
+      
       // deploy script, routes, and namespaces
-      const namespaceResponse = await ms.deployNamespaces(this.provider.config.accountId, funcObj);
-      const workerScriptResponse = await ms.deployWorker(this.provider.config.accountId, funcObj);
-      const routesResponse = await ms.deployRoutes(this.provider.config.zoneId, funcObj);
+      const namespaceResponse = await ms.deployNamespaces(this.provider.config.accountId, functionObject);
+      const workerScriptResponse = await ms.deployWorker(this.provider.config.accountId, functionObject);
+      const routesResponse = await ms.deployRoutes(this.provider.config.zoneId, functionObject);
 
       return {
         workerScriptResponse,
@@ -52,10 +56,6 @@ module.exports = {
 
     for (const scriptName of functions) {
       const functionObject = this.getFunctionObjectFromScriptName(scriptName);
-
-      if (functionObject.webpack) {
-        await webpack.pack(this.serverless, functionObject);
-      }
 
       this.serverless.cli.log(`deploying script: ${scriptName}`);
 
