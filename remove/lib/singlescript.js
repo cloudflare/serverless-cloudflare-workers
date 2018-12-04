@@ -19,13 +19,6 @@
 const sdk = require("../../provider/sdk");
 
 module.exports = {
-  async removeScript(accountId) {
-    return await sdk.cfApiCall({
-      url: `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/script`,
-      method: `DELETE`,
-      contentType: `application/javascript`
-    });
-  },
   async removeRoutes(zoneId) {
     const { success, errors, result } = await sdk.cfApiCall({
       url: `https://api.cloudflare.com/client/v4/zones/${zoneId}/workers/filters`,

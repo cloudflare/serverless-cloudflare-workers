@@ -39,19 +39,18 @@ class CloudflareRemove {
     const {
       accountId,
       zoneId,
-      workers: scriptOptions,
       routes: singleScriptEnabled
     } = this.provider.config;
 
+    const scriptNames = this.serverless.service.getAllFunctions();
     const multiscriptEnabled = await this.checkAccountType();
 
     if (multiscriptEnabled) {
-      if (scriptOptions === undefined || scriptOptions === null) {
+      if (scriptNames === undefined || scriptNames === null) {
         throw new Error(
           "Incorrect template being used for a MultiScript user "
         );
       }
-      const scriptNames = Object.keys(scriptOptions);
 
       const { success, result, errors } = await cf.routes.getRoutes({zoneId});
       let allRoutes = {};
@@ -72,7 +71,7 @@ class CloudflareRemove {
         allRoutes[scriptName].forEach(routeId => {
           promises.push(cf.routes.remove({zoneId, routeId}));
         });
-        promises.push(cf.workers.removeScript({accountId, name: scriptName}));
+        promises.push(cf.workers.remove({accountId, name: scriptName}));
       });
       await Promise.all(promises);
     } else {

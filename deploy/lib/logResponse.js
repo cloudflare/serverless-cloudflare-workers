@@ -19,7 +19,7 @@
 module.exports = {
   logDeployFunctionResponse({ workerScriptResponse, routesResponse }) {
     this.parseWorkerResponse(this.serverless.cli, workerScriptResponse);
-    this.parseRoutesReponse(this.serverless.cli, routesResponse);
+    this.parseRoutesResponse(this.serverless.cli, routesResponse);
   },
   logDeployResponse({ workerScriptResponse, routesResponse, namespaceResponses, isMultiScript }) {
     if (isMultiScript) {

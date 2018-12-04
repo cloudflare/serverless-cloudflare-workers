@@ -49,19 +49,19 @@ module.exports = {
     })
   },
 
-  async deploySingleScript(funcObj) {
+  async deploySingleScript(functionObject) {
     return await BB.bind(this).then(async () => {
       const { zoneId } = this.provider.config;
 
-      const singleScriptRoutes = this.collectRoutes(funcObj.events);
+      const singleScriptRoutes = this.collectRoutes(functionObject.events);
       let workerScriptResponse;
       let routesResponse = [];
 
-      if (funcObj.webpack) {
-        await webpack.pack(this.serverless, funcObj);
+      if (functionObject.webpack) {
+        await webpack.pack(this.serverless, functionObject);
       }
 
-      const scriptContents = generateCode(funcObj);
+      const scriptContents = generateCode(functionObject);
 
       const response = await cf.workers.deploy({
         zoneId: this.provider.config.zoneId,

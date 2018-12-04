@@ -21,7 +21,12 @@ module.exports = {
       target: 'webworker',
       mode: 'production'
     }
-    await webpack(config);
+    try {
+      await webpack(config);
+    } catch(error) {
+      // failed to webpack
+      console.log("Webpack Error: ", error);
+    }
     
     functionObject.script = `dist/${functionObject.script}`;
     fse.removeSync(outputPath);

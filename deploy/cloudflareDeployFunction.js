@@ -24,6 +24,7 @@ const validateFunctionName = require("../shared/validate");
 const accountType = require("../shared/accountType");
 const utils = require("../utils");
 const logs = require("./lib/logResponse");
+const duplicate = require("../shared/duplicate");
 
 class CloudflareDeployFunction {
   constructor(serverless, options) {
@@ -39,19 +40,18 @@ class CloudflareDeployFunction {
           .then(this.validateFunctionName)
           .then(this.checkAccountType)
           .then(async isMultiScript => {
-            const isDuplicateRoutesPresent = await this.checkIfDuplicateRoutes(
-              isMultiScript
-            );
-            if (isDuplicateRoutesPresent) {
+            if (isMultiScript && await duplicate.checkIfDuplicateRoutes(this.serverless, this.provider)) {
               return BB.reject("Duplicate routes pointing to different script");
             }
+            
             const functionObject = this.getFunctionObject();
-            const { worker } = functionObject;
-            if (!this.isValidScriptName(worker)) {
+            const { name } = functionObject;
+            if (!this.isValidScriptName(name)) {
               return BB.reject(
                 "Worker names can contain lowercase letters, numbers, underscores, and dashes. They cannot start with dashes."
               );
             }
+            
             if (isMultiScript) {
               return this.multiScriptDeploy(functionObject);
             } else {
