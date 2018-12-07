@@ -37,7 +37,7 @@ functions:
     webpack: true
     script: handlers/myfunctionhandler
     resources:
-      storage:
+      kv:
         - variable: TEST
           namespace: BEST_NAMESPACE
     events:

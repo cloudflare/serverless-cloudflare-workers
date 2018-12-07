@@ -33,10 +33,10 @@ module.exports = {
    * @param {*} resources 
    */
   async getBindings(resources) {
-    if (resources && resources.storage) { // do nothing if there is no storage config
+    if (resources && resources.kv) { // do nothing if there is no kv config
       const namespaces = await cf.storage.getNamespaces();
 
-      return resources.storage.map(function(store) {
+      return resources.kv.map(function(store) {
         return {
           name: store.variable,
           type: 'kv_namespace',
@@ -77,8 +77,8 @@ module.exports = {
   async deployNamespaces(accountId, functionObject) {
     let responses = [];
     
-    if (functionObject.resources && functionObject.resources.storage) {
-      for (const store of functionObject.resources.storage) {
+    if (functionObject.resources && functionObject.resources.kv) {
+      for (const store of functionObject.resources.kv) {
         let result = await cf.storage.createNamespace({
           accountId,
           name: store.namespace
