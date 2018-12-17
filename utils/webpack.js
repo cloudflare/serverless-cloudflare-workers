@@ -22,12 +22,18 @@ module.exports = {
       mode: 'production'
     }
     try {
-      await webpack(config);
+      let result = await webpack(config);
+      let errors = result.compilation.errors;
+      if (Array.isArray(errors) && errors) {
+        errors.forEach(error => {
+          console.log(`Webpack Error: ${error}`);
+        })
+      }
     } catch(error) {
       // failed to webpack
-      console.log("Webpack Error: ", error);
+      console.log(`Webpack Error: ${error}`);
     }
-    
+
     functionObject.script = `dist/${functionObject.script}`;
     fse.removeSync(outputPath);
   }
