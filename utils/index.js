@@ -26,14 +26,6 @@ module.exports = {
       return this.serverless.service.getFunction(funParam);
     } else return null;
   },
-  getFunctionObjectFromScriptName(scriptName) {
-    const functionName = this.serverless.service.getAllFunctions().find(f => {
-      const func = this.serverless.service.getFunction(f);
-      return func.name === scriptName;
-    });
-
-    return this.getFunctionObject(functionName);
-  },
   getFunctionObjectForSingleScript() {
     const [functionName] = this.serverless.service.getAllFunctions();
     return this.getFunctionObject(functionName);

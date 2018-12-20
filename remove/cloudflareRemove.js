@@ -20,13 +20,15 @@ const BB = require("bluebird");
 const ss = require("./lib/singlescript");
 const accountType = require("../shared/accountType");
 const cf = require("cloudflare-workers-toolkit");
+const utils = require("../utils");
 
 class CloudflareRemove {
   constructor(serverless, options) {
     this.serverless = serverless;
     this.options = options;
     this.provider = this.serverless.getProvider("cloudflare");
-    Object.assign(this, accountType);
+    // TODO: refactor out Object assigns. they lead to difficult code
+    Object.assign(this, accountType, utils);
     this.hooks = {
       "remove:remove": () =>
         BB.bind(this)
@@ -42,11 +44,11 @@ class CloudflareRemove {
       routes: singleScriptEnabled
     } = this.provider.config;
 
-    const scriptNames = this.serverless.service.getAllFunctions();
+    const functionKeys = this.serverless.service.getAllFunctions();
     const multiscriptEnabled = await this.checkAccountType();
 
     if (multiscriptEnabled) {
-      if (scriptNames === undefined || scriptNames === null) {
+      if (functionKeys === undefined || functionKeys === null) {
         throw new Error(
           "Incorrect template being used for a MultiScript user "
         );
@@ -67,11 +69,12 @@ class CloudflareRemove {
       }
 
       const promises = [];
-      scriptNames.forEach(scriptName => {
-        allRoutes[scriptName].forEach(routeId => {
+      functionKeys.forEach(functionKey => {
+        let serviceName = this.getFunctionObject(functionKey).name;
+        allRoutes[serviceName].forEach(routeId => {
           promises.push(cf.routes.remove({zoneId, routeId}));
         });
-        promises.push(cf.workers.remove({accountId, name: scriptName}));
+        promises.push(cf.workers.remove({accountId, name: serviceName}));
       });
       await Promise.all(promises);
     } else {

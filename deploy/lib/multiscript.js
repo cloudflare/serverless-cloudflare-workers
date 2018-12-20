@@ -54,8 +54,9 @@ module.exports = {
     let routesResponse = [];
     let namespaceResponses = [];
 
+    // scriptName is really the key of the function map
     for (const scriptName of functions) {
-      const functionObject = this.getFunctionObjectFromScriptName(scriptName);
+      const functionObject = this.getFunctionObject(scriptName);
 
       this.serverless.cli.log(`deploying script: ${scriptName}`);
 
