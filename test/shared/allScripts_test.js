@@ -1,7 +1,7 @@
 const proxyquire =  require('proxyquire')
 const assert = require('assert');
 
-const ms = proxyquire("../../shared/multiscript", {
+const allScripts = proxyquire("../../shared/allScripts", {
   "cloudflare-workers-toolkit": {
     
   }
@@ -21,7 +21,7 @@ const EVENTS = [{
 
 describe("getRoutes", function() {
   it("pulls routes out of the event config", function() {
-    const routes = ms.getRoutes(EVENTS);
+    const routes = allScripts.getRoutes(EVENTS);
     assert.deepEqual(routes, ['somedomain.com/route1', 'somedomain.com/route2'])
   });
 });

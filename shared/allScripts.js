@@ -52,18 +52,37 @@ module.exports = {
 
   /**
    * Deploys the Worker Script in functionObject from the yml file
-   * @param {*} accountId 
-   * @param {*} functionObject 
+   * @param {*} accountId
+   * @param {*} functionObject
    */
-  async deployWorker(accountId, functionObject) {
+  async deployEnterpriseWorker(accountId, functionObject) {
     cf.setAccountId(accountId);
 
     const contents = generateCode(functionObject);
-    let bindings = await this.getBindings(functionObject.resources);
+    const bindings = await this.getBindings(functionObject.resources);
 
     return await cf.workers.deploy({
       accountId,
       name: functionObject.name,
+      script: contents,
+      bindings
+    })
+  },
+
+  /**
+   * Deploys the Worker Script in functionObject from the yml file
+   * @param {*} accountId
+   * @param {*} zoneId
+   * @param {*} functionObject
+   */
+  async deployWorker(accountId, zoneId, functionObject) {
+    cf.setAccountId(accountId);
+
+    const contents = generateCode(functionObject);
+    const bindings = await this.getBindings(functionObject.resources);
+
+    return await cf.workers.deploy({
+      zoneId,
       script: contents,
       bindings
     })

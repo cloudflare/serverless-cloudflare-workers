@@ -18,7 +18,7 @@
  */
 const BB = require("bluebird");
 const webpack = require("../../utils/webpack");
-const ms = require("../../shared/multiscript");
+const allScripts = require("../../shared/allScripts");
 
 module.exports = {
   async multiScriptDeploy(functionObject) {
@@ -30,9 +30,9 @@ module.exports = {
       }
       
       // deploy script, routes, and namespaces
-      const namespaceResponse = await ms.deployNamespaces(this.provider.config.accountId, functionObject);
-      const workerScriptResponse = await ms.deployWorker(this.provider.config.accountId, functionObject);
-      const routesResponse = await ms.deployRoutes(this.provider.config.zoneId, functionObject);
+      const namespaceResponse = await allScripts.deployNamespaces(this.provider.config.accountId, functionObject);
+      const workerScriptResponse = await allScripts.deployEnterpriseWorker(this.provider.config.accountId, functionObject);
+      const routesResponse = await allScripts.deployRoutes(this.provider.config.zoneId, functionObject);
 
       return {
         workerScriptResponse,

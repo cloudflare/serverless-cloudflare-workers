@@ -16,73 +16,27 @@
  * IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-const sdk = require("../../provider/sdk");
-const { generateCode } = require("./workerScript");
 const BB = require("bluebird");
 const webpack = require("../../utils/webpack");
-const cf = require("cloudflare-workers-toolkit");
+const allScripts = require("../../shared/allScripts");
 
 module.exports = {
-
-  async singleServeRoutesAPI({ pattern, zoneId }) {
-    const payload = { pattern, enabled: true };
-    return await sdk.cfApiCall({
-      url: `https://api.cloudflare.com/client/v4/zones/${zoneId}/workers/filters`,
-      method: `POST`,
-      contentType: `application/json`,
-      body: JSON.stringify(payload)
-    });
-  },
-
-  async getRoutesSingleScript(zoneId) {
-    return sdk.cfApiCall({
-      url: `https://api.cloudflare.com/client/v4/zones/${zoneId}/workers/filters`,
-      method: `GET`
-    });
-  },
-
-  collectRoutes(events) {
-    return events.map(event => {
-      if (event.http) {
-        return event.http.url;
-      }
-    })
-  },
-
   async deploySingleScript(functionObject) {
     return await BB.bind(this).then(async () => {
-      const { zoneId } = this.provider.config;
-
-      const singleScriptRoutes = this.collectRoutes(functionObject.events);
-      let workerScriptResponse;
-      let routesResponse = [];
 
       if (functionObject.webpack) {
         await webpack.pack(this.serverless, functionObject);
       }
 
-      const scriptContents = generateCode(functionObject);
-
-      const response = await cf.workers.deploy({
-        zoneId: this.provider.config.zoneId,
-        script: scriptContents
-      })
-      
-      workerScriptResponse = response;
-
-      for (const pattern of singleScriptRoutes) {
-        this.serverless.cli.log(`deploying route: ${pattern}`);
-        const rResponse = await this.singleServeRoutesAPI({
-          pattern,
-          zoneId
-        });
-
-        routesResponse.push(rResponse);
-      }
+      // deploy script, routes, and namespaces
+      const namespaceResponse = await allScripts.deployNamespaces(this.provider.config.accountId, functionObject);
+      const workerScriptResponse = await allScripts.deployWorker(this.provider.config.accountId, this.provider.config.zoneId, functionObject);
+      const routesResponse = await allScripts.deployRoutes(this.provider.config.zoneId, functionObject);
 
       return {
         workerScriptResponse,
         routesResponse,
+        namespaceResponse,
         isMultiScript: false
       };
     });
