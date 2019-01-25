@@ -19,6 +19,8 @@
 const cf = require("cloudflare-workers-toolkit");
 const { generateCode } = require("../deploy/lib/workerScript");
 
+const FUNCTION_ENV_NAMESPACE = "WORKERS_ENV";
+
 module.exports = {
   getRoutes(events) {
     return events.map(function(event) {
@@ -107,5 +109,31 @@ module.exports = {
     }
 
     return routeResponses;
+  },
+
+  /**
+   * Will deploy the variables specified in functionObject.environment
+   * Goes to Worker KV
+   * @param {*} accountId
+   * @param {*} functionObject
+   */
+  async deployEnvironmentVars(accountId, functionObject) {
+    let responses = [];
+    if (functionObject.environment) {
+      await cf.storage.createNamespace({
+        accountId,
+        name: FUNCTION_ENV_NAMESPACE
+      });
+      for (const key in functionObject.environment) {
+        const response = await cf.storage.setKey({
+          accountId, 
+          namespace: FUNCTION_ENV_NAMESPACE,
+          key,
+          value: functionObject.environment[key]
+        });
+        responses.push(response);
+      }
+    }
+    return responses;
   }
 }

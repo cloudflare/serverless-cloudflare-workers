@@ -45,7 +45,6 @@ class CloudflareDeploy {
             }
             
             if (this.getInvalidScriptNames()) {
-              console.log(this.getInvalidScriptNames());
               return BB.reject(
                 "Worker names can contain lowercase letters, numbers, underscores, and dashes. They cannot start with dashes."
               );

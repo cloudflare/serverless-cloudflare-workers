@@ -22,14 +22,18 @@ module.exports = {
     const { events } = functionObject;
 
     let bakedEvent = { url: "", headers: {}, method: "GET" };
+
     events.forEach(event => {
       const { http } = event;
+
       Object.keys(http).forEach(httpEvent => {
         if (httpEvent === "url") {
-          console.log(http)
           let urlString = http[httpEvent];
-          if (!urlString.startsWith("http://")) {
+          if (!urlString.startsWith("http://") && !urlString.startsWith("https://")) {
             urlString = "https://" + urlString;
+          }
+          if (this.options.querystring) {
+            urlString += "?" + this.options.querystring;
           }
           bakedEvent.url = urlString;
         } else if (httpEvent == "headers") {
