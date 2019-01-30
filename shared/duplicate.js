@@ -32,6 +32,10 @@ module.exports = {
     }
 
     const { zoneId } = provider.config;
+
+    if (!zoneId) {
+      throw("You must specify a Zone ID CLOUDFLARE_ZONE_ID");
+    }
     const response = await cf.routes.getRoutes({zoneId});
     const { result } = response;
       
