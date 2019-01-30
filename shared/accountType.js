@@ -28,7 +28,7 @@ module.exports = {
       .then(function() {
         return cf.workers.getSettings({zoneId});
       })
-      .then(this.checkIfMultiScript);
+      .then(this.checkIfMultiScript)
   },
 
   checkAllEnvironmentVariables() {
@@ -36,7 +36,7 @@ module.exports = {
     const requiredCredentials = credentials.REQUIRED_CREDENTIALS;
     requiredCredentials.forEach(requiredCredential => {
       if (!envCreds[requiredCredential]) {
-        BB.reject(
+        return BB.reject(
           `Missing mandatory environment variable: CLOUDFLARE_${requiredCredential.toUpperCase()}.`
         );
       }
@@ -44,11 +44,11 @@ module.exports = {
   },
   checkIfMultiScript({ success, errors, result }) {
     if (!success) {
-      BB.reject(JSON.stringify(errors));
+      return BB.reject(JSON.stringify(errors));
     }
     const { multiscript, enabled } = result;
     if (!enabled) {
-      BB.reject(
+      return BB.reject(
         "Workers are not enabled for this account, please upgrade your account at https://cloudflare.com"
       );
     }
