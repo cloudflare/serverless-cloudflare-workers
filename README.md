@@ -25,6 +25,21 @@ functions:
   
 ```
 
+### Environment Variables
+
+While Cloudflare Workers doesn't exactly offer environment vairables, we can bind global variables to values, essentially giving the same capabilities. In your function configuration, add key value pairs in `environment`
+
+```yaml
+functions:
+  myFunction:
+    environment:
+      MYKEY: value_of_my_key
+      ANOTHER_KEY_OF_MINE: sweet_child_o_mine
+
+```
+
+Then in your script, you can reference `MYKEY` to access the value.
+
 ### Using Cloudflare KV Storage
 
 The plugin can create and bind a [KV Storage](https://developers.cloudflare.com/workers/kv/) namespace for your function by simpling adding a resources section.

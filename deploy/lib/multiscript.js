@@ -31,7 +31,6 @@ module.exports = {
       
       // deploy script, routes, and namespaces
       const namespaceResponse = await ms.deployNamespaces(this.provider.config.accountId, functionObject);
-      const envResponse = await ms.deployEnvironmentVars(this.provider.config.accountId, functionObject);
       const workerScriptResponse = await ms.deployWorker(this.provider.config.accountId, functionObject);
       const routesResponse = await ms.deployRoutes(this.provider.config.zoneId, functionObject);
 

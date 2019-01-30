@@ -19,8 +19,6 @@
 const cf = require("cloudflare-workers-toolkit");
 const { generateCode } = require("../deploy/lib/workerScript");
 
-const FUNCTION_ENV_NAMESPACE = "WORKERS_ENV";
-
 module.exports = {
   getRoutes(events) {
     return events.map(function(event) {
@@ -31,14 +29,18 @@ module.exports = {
   },
 
   /**
-   * Parses the resources config to build bindings for the worker. Has to get namespaces for the CF id
-   * @param {*} resources 
+   * Parses the resources and environment config to build bindings for the worker. async because it has to get namespaces for the CF id
+   * @param {*} functionObject 
    */
-  async getBindings(resources) {
+  async getBindings(functionObject) {
+    
+    let bindings = [];
+    let resources = functionObject.resources;
+
     if (resources && resources.kv) { // do nothing if there is no kv config
       const namespaces = await cf.storage.getNamespaces();
 
-      return resources.kv.map(function(store) {
+      let namespaceBindings = resources.kv.map(function(store) {
         return {
           name: store.variable,
           type: 'kv_namespace',
@@ -46,10 +48,22 @@ module.exports = {
             return ns.title === store.namespace;
           }).id
         }
-      })
+      });
+
+      bindings = bindings.concat(namespaceBindings);
     }
 
-    return [];
+    if (functionObject.environment) {
+      for (const key in functionObject.environment) {
+        bindings.push({
+          name: key,
+          type: 'secret_text',
+          text: functionObject.environment[key]
+        });
+      }
+    }
+
+    return bindings;
   },
 
   /**
@@ -61,7 +75,7 @@ module.exports = {
     cf.setAccountId(accountId);
 
     const contents = generateCode(functionObject);
-    let bindings = await this.getBindings(functionObject.resources);
+    let bindings = await this.getBindings(functionObject);
 
     return await cf.workers.deploy({
       accountId,
@@ -109,31 +123,5 @@ module.exports = {
     }
 
     return routeResponses;
-  },
-
-  /**
-   * Will deploy the variables specified in functionObject.environment
-   * Goes to Worker KV
-   * @param {*} accountId
-   * @param {*} functionObject
-   */
-  async deployEnvironmentVars(accountId, functionObject) {
-    let responses = [];
-    if (functionObject.environment) {
-      await cf.storage.createNamespace({
-        accountId,
-        name: FUNCTION_ENV_NAMESPACE
-      });
-      for (const key in functionObject.environment) {
-        const response = await cf.storage.setKey({
-          accountId, 
-          namespace: FUNCTION_ENV_NAMESPACE,
-          key,
-          value: functionObject.environment[key]
-        });
-        responses.push(response);
-      }
-    }
-    return responses;
   }
 }
