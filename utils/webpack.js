@@ -8,6 +8,7 @@ module.exports = {
     serverless.cli.log(`bundling: ${functionObject.script}`);
 
     let outputPath = path.join(serverless.config.servicePath, functionObject.script);
+    let webpackConfig = functionObject.webpack;
 
     let config = {
       entry: {
@@ -20,6 +21,11 @@ module.exports = {
       devtool: 'cheap-module-source-map',
       target: 'webworker',
       mode: 'production'
+    }
+
+    // Check whether webpackConfig is an object
+    if (webpackConfig === Object(webpackConfig)) {
+      config = Object.assign(config, webpackConfig);
     }
     try {
       let result = await webpack(config);
