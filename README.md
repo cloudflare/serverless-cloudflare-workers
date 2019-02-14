@@ -22,8 +22,25 @@ functions:
       - http:
           url: example.com/myfunction
           method: GET
-  
 ```
+
+To customize webpack config, you can pass config as value.
+
+```yaml
+functions:
+  myfunction:
+    name: myfunction
+    webpack:
+      node:
+        fs: empty
+        tls: empty
+    script: handlers/myfunctionhandler
+    events:
+      - http:
+          url: example.com/myfunction
+          method: GET
+```
+
 
 ### Environment Variables
 
