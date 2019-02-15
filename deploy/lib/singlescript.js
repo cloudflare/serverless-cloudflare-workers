@@ -21,6 +21,7 @@ const { generateCode } = require("./workerScript");
 const BB = require("bluebird");
 const webpack = require("../../utils/webpack");
 const cf = require("cloudflare-workers-toolkit");
+const ms = require("../../shared/multiscript");
 
 module.exports = {
 
@@ -63,9 +64,13 @@ module.exports = {
 
       const scriptContents = generateCode(functionObject);
 
+      cf.setAccountId(this.provider.config.accountId);
+      let bindings = await ms.getBindings(functionObject)
       const response = await cf.workers.deploy({
+        accountId: this.provider.config.accountId,
         zoneId: this.provider.config.zoneId,
-        script: scriptContents
+        script: scriptContents,
+        bindings
       })
       
       workerScriptResponse = response;
