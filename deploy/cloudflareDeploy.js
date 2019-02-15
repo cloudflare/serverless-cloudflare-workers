@@ -39,7 +39,6 @@ class CloudflareDeploy {
         BB.bind(this)
           .then(this.checkAccountType)
           .then(async isMultiScript => {
-            
             if (isMultiScript && await duplicate.checkIfDuplicateRoutes(this.serverless, this.provider)) {
               return BB.reject("Duplicate routes pointing to different script");
             }

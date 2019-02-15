@@ -30,11 +30,13 @@ module.exports = {
 
   /**
    * Parses the resources and environment config to build bindings for the worker. async because it has to get namespaces for the CF id
+   * @param {*} provider
    * @param {*} functionObject 
    */
-  async getBindings(functionObject) {
+  async getBindings(provider, functionObject) {
     
     let bindings = [];
+    
     let resources = functionObject.resources;
 
     if (resources && resources.kv) { // do nothing if there is no kv config
@@ -53,14 +55,16 @@ module.exports = {
       bindings = bindings.concat(namespaceBindings);
     }
 
-    if (functionObject.environment) {
-      for (const key in functionObject.environment) {
-        bindings.push({
-          name: key,
-          type: 'secret_text',
-          text: functionObject.environment[key]
-        });
-      }
+    // Get Environment Variables
+    let envVars = Object.assign({}, provider.environment);
+    envVars = Object.assign(envVars, functionObject.environment);
+
+    for (const key in envVars) {
+      bindings.push({
+        name: key,
+        type: 'secret_text',
+        text: envVars[key]
+      });
     }
 
     return bindings;
@@ -68,21 +72,24 @@ module.exports = {
 
   /**
    * Deploys the Worker Script in functionObject from the yml file
-   * @param {*} accountId 
+   * @param {*} accountId
+   * @param {*} service
    * @param {*} functionObject 
    */
-  async deployWorker(accountId, functionObject) {
+  async deployWorker(accountId, service, functionObject) {
     cf.setAccountId(accountId);
 
     const contents = generateCode(functionObject);
-    let bindings = await this.getBindings(functionObject);
+    let bindings = await this.getBindings(service.provider, functionObject);
 
-    return await cf.workers.deploy({
+    let t = await cf.workers.deploy({
       accountId,
       name: functionObject.name,
       script: contents,
       bindings
     })
+    
+    return t;
   },
 
   /**

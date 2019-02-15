@@ -17,10 +17,6 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 module.exports = {
-  logDeployFunctionResponse({ workerScriptResponse, routesResponse }) {
-    this.parseWorkerResponse(this.serverless.cli, workerScriptResponse);
-    this.parseRoutesResponse(this.serverless.cli, routesResponse);
-  },
   logDeployResponse({ workerScriptResponse, routesResponse, namespaceResponses, isMultiScript }) {
     if (isMultiScript) {
       this.aggregateWorkerResponse(this.serverless.cli, workerScriptResponse);

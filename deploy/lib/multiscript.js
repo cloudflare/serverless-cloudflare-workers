@@ -31,7 +31,7 @@ module.exports = {
       
       // deploy script, routes, and namespaces
       const namespaceResponse = await ms.deployNamespaces(this.provider.config.accountId, functionObject);
-      const workerScriptResponse = await ms.deployWorker(this.provider.config.accountId, functionObject);
+      const workerScriptResponse = await ms.deployWorker(this.provider.config.accountId, this.serverless.service, functionObject);
       const routesResponse = await ms.deployRoutes(this.provider.config.zoneId, functionObject);
 
       return {
@@ -42,9 +42,14 @@ module.exports = {
     });
   },
 
-  async multiScriptDeployAll() {
+  /**
+   * Deploy functions passed in or all functions if no functions are submitted
+   * 
+   * @param {Array[string]} functions 
+   */
+  async multiScriptDeployAll(functions = null) {
 
-    const functions = this.serverless.service.getAllFunctions();
+    functions = functions || this.serverless.service.getAllFunctions();
 
     if (typeof(functions) === 'undefined' || functions === null) {
       throw new Error("Incorrect template being used for a MultiScript user ");

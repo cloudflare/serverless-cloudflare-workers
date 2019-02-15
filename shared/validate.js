@@ -20,12 +20,13 @@ const BB = require("bluebird");
 
 module.exports = {
   validateFunctionName() {
-    BB.bind(this)
+    return BB.bind(this)
       .then(this.checkIfFuntionParamPresent)
       .then(this.checkFunctionName);
   },
   checkIfFuntionParamPresent() {
     let funParam = this.options.function;
+
     if (funParam === undefined) {
       funParam = this.options.f;
     }
@@ -35,14 +36,22 @@ module.exports = {
     }
     return funParam;
   },
-  checkFunctionName(funParam) {
-    const filteredFunctionName = this.serverless.service
-      .getAllFunctions()
-      .find(f => f === funParam);
 
-    if (filteredFunctionName === "" || filteredFunctionName === undefined) {
-      return BB.reject("Use appropriate function names");
+  /**
+   * Ensures that funParam is an array of functions and ensures there are config entries for each.
+   */
+  checkFunctionName(funParam) {
+    const functions = this.serverless.service.getAllFunctions();
+    if (!Array.isArray(funParam)) {
+      funParam = Array(funParam)
     }
+    for (let func of funParam) {
+      if (functions.indexOf(func) === -1) {
+        return BB.reject(`The specified function: ${func} was not found in your configuration file.`);
+      }
+    }
+
+    return funParam;
   },
 
   isValidScriptName(sname) {
