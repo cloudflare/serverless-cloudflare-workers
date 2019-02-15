@@ -34,31 +34,35 @@ class CloudflareDeployFunction {
 
     Object.assign(this, validateFunctionName, accountType, ms, utils, ss, logs);
 
+    let functionNamesForDeploy = [];
+
     this.hooks = {
       "deploy:function:deploy": () =>
         BB.bind(this)
           .then(this.validateFunctionName)
-          .then(this.checkAccountType)
+          .then( (functions) => {
+            functionNamesForDeploy = functions;
+            return this.checkAccountType;
+          })
           .then(async isMultiScript => {
             if (isMultiScript && await duplicate.checkIfDuplicateRoutes(this.serverless, this.provider)) {
               return BB.reject("Duplicate routes pointing to different script");
             }
             
-            const functionObject = this.getFunctionObject();
-            const { name } = functionObject;
-            if (!this.isValidScriptName(name)) {
+            if (this.getInvalidScriptNames()) {
               return BB.reject(
                 "Worker names can contain lowercase letters, numbers, underscores, and dashes. They cannot start with dashes."
               );
             }
             
             if (isMultiScript) {
-              return this.multiScriptDeploy(functionObject);
+              return this.multiScriptDeployAll(functionNamesForDeploy);
             } else {
+              const functionObject = this.getFunctionObjectForSingleScript();
               return this.deploySingleScript(functionObject);
             }
           })
-          .then(this.logDeployFunctionResponse)
+          .then(this.logDeployResponse)
     };
   }
 }

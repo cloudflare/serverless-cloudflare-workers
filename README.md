@@ -40,6 +40,17 @@ functions:
 
 Then in your script, you can reference `MYKEY` to access the value.
 
+You can also add an environment block under `provider`. These will get added to every function. If a function defines the same variable, the function defintion will overwrite the provider block definition.
+
+```yaml
+provider:
+  name: cloudflare
+  environment:
+    MYKEY: value_of_my_key
+    ANOTHER_KEY_OF_MINE: sweet_child_o_mine
+
+```
+
 ### Using Cloudflare KV Storage
 
 The plugin can create and bind a [KV Storage](https://developers.cloudflare.com/workers/kv/) namespace for your function by simpling adding a resources section.

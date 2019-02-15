@@ -26,14 +26,19 @@ class CloudflareRemove {
   constructor(serverless, options) {
     this.serverless = serverless;
     this.options = options;
+
     this.provider = this.serverless.getProvider("cloudflare");
     // TODO: refactor out Object assigns. they lead to difficult code
     Object.assign(this, accountType, utils);
     this.hooks = {
-      "remove:remove": () =>
+      "remove:remove": () => {
+        if (this.options.function || this.options.f) {
+          throw new Error("This does not support -f yet.")
+        }
         BB.bind(this)
           .then(this.remove)
           .then(resp => console.log("Removed"))
+      }
     };
   }
 
