@@ -65,7 +65,7 @@ module.exports = {
       const scriptContents = generateCode(functionObject);
 
       cf.setAccountId(this.provider.config.accountId);
-      let bindings = await ms.getBindings(functionObject)
+      let bindings = await ms.getBindings(this.provider, functionObject)
       const response = await cf.workers.deploy({
         accountId: this.provider.config.accountId,
         zoneId: this.provider.config.zoneId,
