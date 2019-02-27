@@ -50,6 +50,12 @@ module.exports = {
     })
   },
 
+  /**
+   * Deploys a single script zone which can only have one script per zone.
+   * Because of this the name field is omitted.
+   * Also, zoneId must be used since it is required to deploy a single script.
+   * @param {*} functionObject 
+   */
   async deploySingleScript(functionObject) {
     return await BB.bind(this).then(async () => {
       const { zoneId } = this.provider.config;
@@ -66,12 +72,13 @@ module.exports = {
 
       cf.setAccountId(this.provider.config.accountId);
       let bindings = await ms.getBindings(this.provider, functionObject)
+
       const response = await cf.workers.deploy({
         accountId: this.provider.config.accountId,
-        zoneId: this.provider.config.zoneId,
+        zoneId,
         script: scriptContents,
         bindings
-      })
+      });
       
       workerScriptResponse = response;
 

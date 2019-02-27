@@ -1,6 +1,6 @@
 {
   "name": "serverless-cloudflare-workers",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "serverless cloudflare workers ",
   "main": "index.js",
   "scripts": {
@@ -22,7 +22,7 @@
   ],
   "dependencies": {
     "bluebird": "^3.4.7",
-    "cloudflare-workers-toolkit": "0.0.10",
+    "cloudflare-workers-toolkit": "0.0.11",
     "fs-extra": "^7.0.1",
     "node-fetch": "^2.3.0",
     "webpack": "^4.25.1"
