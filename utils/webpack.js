@@ -23,11 +23,13 @@ module.exports = {
       mode: 'production'
     }
 
-    // Check whether webpackConfig is an object
-    if (webpackConfig === Object(webpackConfig)) {
-      config = Object.assign(config, webpackConfig);
-    }
     try {
+      // Check whether webpackConfig is a string
+      if (typeof webpackConfig == 'string') {
+        let configPath = path.join(serverless.config.servicePath, webpackConfig);
+        let fileConfig = require(configPath);
+        config = Object.assign(config, fileConfig);
+      }
       let result = await webpack(config);
       let errors = result.compilation.errors;
       if (Array.isArray(errors) && errors) {

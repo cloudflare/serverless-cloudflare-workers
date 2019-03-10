@@ -24,16 +24,13 @@ functions:
           method: GET
 ```
 
-To customize webpack config, you can pass config as value.
+To customize webpack config, you can pass config file path as value.
 
 ```yaml
 functions:
   myfunction:
     name: myfunction
-    webpack:
-      node:
-        fs: empty
-        tls: empty
+    webpack: ./webpack.config.js
     script: handlers/myfunctionhandler
     events:
       - http:
