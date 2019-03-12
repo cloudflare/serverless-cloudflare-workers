@@ -18,13 +18,17 @@
  */
 const path = require("path");
 const fs = require("fs");
-const generateCode = thefunctionObject => {
-  let { script } = thefunctionObject;
+const webpack = require("../../utils/webpack");
+
+const generateCode = (serverless, functionObject) => {
+  let { script } = functionObject;
+
+  const rootPath = webpack.getAssetPathPrefix(serverless, functionObject)
 
   if (path.extname(script) != ".js") {
-    script = script.concat(".js");
+    script = `${rootPath}${script}.js`
   }
-  
+
   return fs.readFileSync(script).toString();
 };
 

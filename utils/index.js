@@ -19,7 +19,7 @@
 module.exports = {
   getFunctionObject(paramName) {
     let funParam = paramName || this.options.function;
-    if (typeof(funParam) === 'undefined') {
+    if (typeof funParam === "undefined") {
       funParam = this.options.f;
     }
     if (funParam) {
@@ -37,10 +37,14 @@ module.exports = {
       errors: workerErrors
     } = apiResponse;
 
+    const { id, size } = workerResult || {};
+
     if (workerDeploySuccess) {
-      serverlessConsole.log(`✅  Script Deployed `);
+      serverlessConsole.log(
+        `✅  Script Deployed. Name: ${id}, Size: ${(size / 1024).toFixed(2)}K`
+      );
     } else {
-      serverlessConsole.log(`❌  Fatal Error, Script Not Deployed!`);
+      serverlessConsole.log(`❌ Fatal Error, Script Not Deployed!`);
       workerErrors.forEach(err => {
         let { code, message } = err;
         serverlessConsole.log(

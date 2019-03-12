@@ -21,7 +21,7 @@ const { generateCode } = require("../deploy/lib/workerScript");
 
 module.exports = {
   getRoutes(events) {
-    return events.map(function(event) {
+    return events.map(function (event) {
       if (event.http) {
         return event.http.url;
       }
@@ -34,19 +34,19 @@ module.exports = {
    * @param {*} functionObject 
    */
   async getBindings(provider, functionObject) {
-    
+
     let bindings = [];
-    
+
     let resources = functionObject.resources;
 
     if (resources && resources.kv) { // do nothing if there is no kv config
       const namespaces = await cf.storage.getNamespaces();
 
-      let namespaceBindings = resources.kv.map(function(store) {
+      let namespaceBindings = resources.kv.map(function (store) {
         return {
           name: store.variable,
           type: 'kv_namespace',
-          namespace_id: namespaces.find(function(ns) {
+          namespace_id: namespaces.find(function (ns) {
             return ns.title === store.namespace;
           }).id
         }
@@ -76,10 +76,11 @@ module.exports = {
    * @param {*} service
    * @param {*} functionObject 
    */
-  async deployWorker(accountId, service, functionObject) {
+  async deployWorker(accountId, serverless, functionObject) {
+    const { service } = serverless;
     cf.setAccountId(accountId);
 
-    const contents = generateCode(functionObject);
+    const contents = generateCode(serverless, functionObject);
     let bindings = await this.getBindings(service.provider, functionObject);
 
     let t = await cf.workers.deploy({
@@ -88,7 +89,7 @@ module.exports = {
       script: contents,
       bindings
     })
-    
+
     return t;
   },
 
@@ -99,7 +100,7 @@ module.exports = {
    */
   async deployNamespaces(accountId, functionObject) {
     let responses = [];
-    
+
     if (functionObject.resources && functionObject.resources.kv) {
       for (const store of functionObject.resources.kv) {
         let result = await cf.storage.createNamespace({
@@ -112,7 +113,7 @@ module.exports = {
         responses.push(result);
       }
     }
-    
+
     return responses;
   },
 
@@ -125,7 +126,7 @@ module.exports = {
     const allRoutes = this.getRoutes(functionObject.events);
     let routeResponses = [];
     for (const pattern of allRoutes) {
-      const response = await cf.routes.deploy({path: pattern, scriptName: functionObject.name, zoneId});
+      const response = await cf.routes.deploy({ path: pattern, scriptName: functionObject.name, zoneId });
       routeResponses.push(response)
     }
 
