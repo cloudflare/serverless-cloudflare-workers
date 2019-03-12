@@ -21,25 +21,41 @@ const webpack = require("../../utils/webpack");
 const ms = require("../../shared/multiscript");
 
 module.exports = {
-  async multiScriptDeploy(functionObject) {
+  async deployScriptToCloudflare(functionObject) {
     return BB.bind(this)
-    .then(async () => {
+      .then(async () => {
 
-      if (functionObject.webpack) {
-        await webpack.pack(this.serverless, functionObject);
-      }
-      
-      // deploy script, routes, and namespaces
-      const namespaceResponse = await ms.deployNamespaces(this.provider.config.accountId, functionObject);
-      const workerScriptResponse = await ms.deployWorker(this.provider.config.accountId, this.serverless.service, functionObject);
-      const routesResponse = await ms.deployRoutes(this.provider.config.zoneId, functionObject);
+        if (functionObject.webpack) {
+          await webpack.pack(this.serverless, functionObject);
+        }
 
-      return {
-        workerScriptResponse,
-        routesResponse,
-        namespaceResponse
-      };
-    });
+        // deploy script, routes, and namespaces
+        const namespaceResponse = await ms.deployNamespaces(this.provider.config.accountId, functionObject);
+        const workerScriptResponse = await ms.deployWorker(this.provider.config.accountId, this.serverless, functionObject);
+        const routesResponse = await ms.deployRoutes(this.provider.config.zoneId, functionObject);
+
+        return {
+          workerScriptResponse,
+          routesResponse,
+          namespaceResponse
+        };
+      });
+  },
+
+
+  async  deployScript(scriptName) {
+    const startScriptTime = Date.now();
+    const functionObject = this.getFunctionObject(scriptName);
+
+    this.serverless.cli.log(`deploying script: ${scriptName}`);
+    const {
+      workerScriptResponse,
+      routesResponse: rResponse,
+      namespaceResponse,
+    } = await this.deployScriptToCloudflare(functionObject, scriptName);
+
+    this.serverless.cli.log(`Finished deployment ${scriptName} in ${(Date.now() - startScriptTime) / 1000} seconds`);
+    return { workerResponse: workerScriptResponse, routesResponse: rResponse, namespaceResponse }
   },
 
   /**
@@ -51,7 +67,7 @@ module.exports = {
 
     functions = functions || this.serverless.service.getAllFunctions();
 
-    if (typeof(functions) === 'undefined' || functions === null) {
+    if (typeof (functions) === 'undefined' || functions === null) {
       throw new Error("Incorrect template being used for a MultiScript user ");
     }
 
@@ -59,21 +75,17 @@ module.exports = {
     let routesResponse = [];
     let namespaceResponses = [];
 
+    // Build global webpack if available
+    await webpack.packGlobalWebpack(this.serverless)
+
+    this.serverless.cli.log('Starting deployment');
+
     // scriptName is really the key of the function map
-    for (const scriptName of functions) {
-      const functionObject = this.getFunctionObject(scriptName);
-
-      this.serverless.cli.log(`deploying script: ${scriptName}`);
-
-      const {
-        workerScriptResponse,
-        routesResponse: rResponse,
-        namespaceResponse,
-      } = await this.multiScriptDeploy(functionObject);
-
-      workerResponse.push(workerScriptResponse);
-      routesResponse.push(rResponse);
-      namespaceResponses.push(namespaceResponse);
+    for (const name of functions) {
+      const result = await this.deployScript(name);
+      workerResponse.push(result.workerResponse)
+      routesResponse.push(result.routesResponse)
+      namespaceResponses.push(result.namespaceResponse)
     }
 
     return {

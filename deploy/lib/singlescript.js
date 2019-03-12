@@ -64,11 +64,15 @@ module.exports = {
       let workerScriptResponse;
       let routesResponse = [];
 
+      // Build global webpack if available
+      await webpack.packGlobalWebpack(this.serverless)
+
+      // If a local webpack config defined, do that too
       if (functionObject.webpack) {
         await webpack.pack(this.serverless, functionObject);
       }
 
-      const scriptContents = generateCode(functionObject);
+      const scriptContents = generateCode(this.serverless, functionObject);
 
       cf.setAccountId(this.provider.config.accountId);
       let bindings = await ms.getBindings(this.provider, functionObject)
@@ -79,7 +83,7 @@ module.exports = {
         script: scriptContents,
         bindings
       });
-      
+
       workerScriptResponse = response;
 
       for (const pattern of singleScriptRoutes) {
