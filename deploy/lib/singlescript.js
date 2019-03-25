@@ -75,6 +75,7 @@ module.exports = {
       const scriptContents = generateCode(this.serverless, functionObject);
 
       cf.setAccountId(this.provider.config.accountId);
+      const namespaceResponse = await ms.deployNamespaces(this.provider.config.accountId, functionObject);
       let bindings = await ms.getBindings(this.provider, functionObject)
 
       const response = await cf.workers.deploy({
