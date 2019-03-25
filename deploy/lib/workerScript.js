@@ -32,6 +32,22 @@ const generateCode = (serverless, functionObject) => {
   return fs.readFileSync(script).toString();
 };
 
+/**
+ * Builds the list of wasm objects for script deployment
+ * @param {} functionObject 
+ */
+const generateWASM = (functionObject) => {
+  let wasm = [];
+  if (functionObject && functionObject.resources && functionObject.resources.wasm) {
+    functionObject.resources.wasm.map((w) => {
+      console.log("pushing" + `${w.file}`)
+      wasm.push(w.file);
+    })
+  }
+  return wasm;
+}
+
 module.exports = {
-  generateCode
+  generateCode,
+  generateWASM
 };
