@@ -17,7 +17,8 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 const cf = require("cloudflare-workers-toolkit");
-const { generateCode } = require("../deploy/lib/workerScript");
+const path = require("path");
+const { generateCode, generateWASM } = require("../deploy/lib/workerScript");
 
 module.exports = {
   getRoutes(events) {
@@ -55,6 +56,18 @@ module.exports = {
       bindings = bindings.concat(namespaceBindings);
     }
 
+    if (resources && resources.wasm) {
+      let wasmBindings = resources.wasm.map(function(wasm) {
+        return {
+          name: wasm.variable,
+          type: 'wasm_module',
+          part: path.basename(wasm.file, path.extname(wasm.file))
+        }
+      });
+
+      bindings = bindings.concat(wasmBindings);
+    }
+
     // Get Environment Variables
     let envVars = Object.assign({}, provider.environment);
     envVars = Object.assign(envVars, functionObject.environment);
@@ -87,6 +100,7 @@ module.exports = {
       accountId,
       name: functionObject.name,
       script: contents,
+      wasm: generateWASM(functionObject),
       bindings
     })
 
