@@ -40,7 +40,6 @@ const generateWASM = (functionObject) => {
   let wasm = [];
   if (functionObject && functionObject.resources && functionObject.resources.wasm) {
     functionObject.resources.wasm.map((w) => {
-      console.log("pushing" + `${w.file}`)
       wasm.push(w.file);
     })
   }
