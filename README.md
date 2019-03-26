@@ -86,3 +86,23 @@ functions:
           url: example.com/myfunction
           method: GET
 ```
+
+### Web Assembly
+
+The plugin can upload and bind WASM to execute in your worker. The easiest way to do this is to use the --template cloudflare-workers-rust when generating a project. The template includes a Rust create folder setup with wasm-pack, a webpack script for adding the generated javascript into your project, and the yml file settings to upload the wasm file itself.
+
+```yaml
+functions:
+  myfunction:
+    name: myfunction
+    webpack: true
+    script: handlers/myfunctionhandler
+    resources:
+      wasm:
+        - variable: WASM
+          filename: rust/pkg/wasm_bg.wasm
+    events:
+      - http:
+          url: example.com/myfunction
+          method: GET
+```
