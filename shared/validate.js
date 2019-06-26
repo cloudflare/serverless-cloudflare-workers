@@ -55,11 +55,7 @@ module.exports = {
   },
 
   isValidScriptName(sname) {
-    const re = new RegExp("^[a-z0-9_][A-Za-z0-9-_]*$");
-    if (re.exec(sname)) {
-      return true;
-    }
-    return false;
+    return /^[a-z0-9_][a-z0-9-_]*$/.test(sname);
   },
   
   getInvalidScriptNames() {
