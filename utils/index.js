@@ -55,10 +55,16 @@ module.exports = {
     return { workerDeploySuccess, workerResult, workerErrors };
   },
   aggregateWorkerResponse(serverlessConsole, apiResponse) {
-    let status = [];
-    apiResponse.forEach(resp => {
-      status.push(this.parseWorkerResponse(serverlessConsole, resp));
-    });
+    let success = true;
+    const status = [];
+    for (let resp of apiResponse) {
+      const response = this.parseWorkerResponse(serverlessConsole, resp);
+      success &= response.workerDeploySuccess;
+      status.push(response);
+    }
+    if (!success) {
+      throw new Error('Worker script failed to deploy.');
+    }
     return status;
   },
 
@@ -71,7 +77,8 @@ module.exports = {
         errors: routeErrors
       } = resp;
 
-      if (routeSuccess || !this.routeContainsFatalErrors(routeErrors)) {
+      routeSuccess |= !this.routeContainsFatalErrors(routeErrors);
+      if (routeSuccess) {
         serverlessConsole.log(`✅  Routes Deployed `);
       } else {
         serverlessConsole.log(`❌  Fatal Error, Routes Not Deployed!`);
@@ -89,12 +96,18 @@ module.exports = {
   },
 
   aggregateRoutesResponse(serverlessConsole, apiResponse) {
-    let status = [];
-
-    apiResponse.forEach(resp => {
-      status.push(this.parseRoutesResponse(serverlessConsole, resp));
-    });
-
+    let success = true;
+    const status = [];
+    for (const resp of apiResponse) {
+      const routesResults = this.parseRoutesResponse(serverlessConsole, resp);
+      for (const routeResult of routesResults) {
+        success &= routeResult.routesSuccess;
+      }
+      status.push(routesResults);
+    }
+    if (!success) {
+      throw new Error('Worker routes failed to deploy.');
+    }
     return status;
   },
 
