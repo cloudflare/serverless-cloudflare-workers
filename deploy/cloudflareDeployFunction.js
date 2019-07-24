@@ -38,31 +38,34 @@ class CloudflareDeployFunction {
 
     this.hooks = {
       "deploy:function:deploy": () =>
-        BB.bind(this)
-          .then(this.validateFunctionName)
-          .then( (functions) => {
-            functionNamesForDeploy = functions;
-            return this.checkAccountType;
-          })
-          .then(async isMultiScript => {
-            if (isMultiScript && await duplicate.checkIfDuplicateRoutes(this.serverless, this.provider)) {
-              return BB.reject("Duplicate routes pointing to different script");
-            }
-            
-            if (this.getInvalidScriptNames()) {
-              return BB.reject(
-                "Worker names can contain lowercase letters, numbers, underscores, and dashes. They cannot start with dashes."
-              );
-            }
-            
-            if (isMultiScript) {
-              return this.multiScriptDeployAll(functionNamesForDeploy);
-            } else {
-              const functionObject = this.getFunctionObjectForSingleScript();
-              return this.deploySingleScript(functionObject);
-            }
-          })
-          .then(this.logDeployResponse)
+      BB.bind(this)
+      .then(this.validateFunctionName)
+      .then( (functions) => {
+        functionNamesForDeploy = functions;
+        return this.checkAccountType;
+      })
+      .then(async isMultiScript => {
+        if (isMultiScript && await duplicate.checkIfDuplicateRoutes(this.serverless, this.provider)) {
+          return BB.reject("Duplicate routes pointing to different script");
+        }
+
+        if (this.getInvalidScriptNames()) {
+          return BB.reject(
+            "Worker names can contain lowercase letters, numbers, underscores, and dashes. They cannot start with dashes."
+          );
+        }
+
+        if (isMultiScript) {
+          return this.multiScriptDeployAll(functionNamesForDeploy);
+        } else {
+          const functionObject = this.getFunctionObjectForSingleScript();
+          return this.deploySingleScript(functionObject);
+        }
+      })
+      .then(this.logDeployResponse)
+      .catch(error => {
+        return BB.reject(error.message);
+      }) 
     };
   }
 }
