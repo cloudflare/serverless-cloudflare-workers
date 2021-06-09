@@ -34,10 +34,17 @@ module.exports = {
         const workerScriptResponse = await ms.deployWorker(this.provider.config.accountId, this.serverless, functionObject);
         const routesResponse = await ms.deployRoutes(this.provider.config.zoneId, functionObject);
 
+        let zonelessResponse;
+
+        if (functionObject.zoneless) {
+          zonelessResponse = await ms.deployZoneless(this.provider.config.accountId, functionObject);
+        }
+
         return {
           workerScriptResponse,
           routesResponse,
-          namespaceResponse
+          namespaceResponse,
+          zonelessResponse
         };
       });
   },
