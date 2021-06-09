@@ -33,6 +33,20 @@ module.exports = {
 
     const { zoneId } = provider.config;
 
+    const functions = serverless.service.getAllFunctions();
+
+    const hasRoutes = functions.some(scriptName => {
+      const functionObject = serverless.service.getFunction(scriptName);
+
+      if (functionObject.events && functionObject.events.length) {
+        return true;
+      }
+    });
+
+    if (!hasRoutes) {
+      return false;
+    }
+
     if (!zoneId) {
       throw("You must specify a Zone ID CLOUDFLARE_ZONE_ID");
     }
@@ -43,7 +57,6 @@ module.exports = {
     const foundDuplicate = result.some(filters => {
       const { pattern, script } = filters;
 
-      const functions = serverless.service.getAllFunctions();
       for (const scriptName of functions) {
         const functionObject = serverless.service.getFunction(scriptName);
         const routes = functionObject.events.map(function(event) {

@@ -17,6 +17,7 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 const cf = require("cloudflare-workers-toolkit");
+const sdk = require("../provider/sdk");
 const path = require("path");
 const { generateCode, generateWASM } = require("../deploy/lib/workerScript");
 
@@ -145,5 +146,18 @@ module.exports = {
     }
 
     return routeResponses;
+  },
+
+  async deployZoneless(accountId, functionObject) {
+      const name = functionObject.name;
+
+      const response = await sdk.cfApiCall({
+          url: `/accounts/${accountId}/workers/scripts/${name}/subdomain`,
+          method: `POST`,
+          contentType: 'application/json',
+          body: JSON.stringify({enabled: true})
+        });
+
+      return response;
   }
 }

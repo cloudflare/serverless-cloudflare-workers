@@ -22,11 +22,12 @@ const cf = require("cloudflare-workers-toolkit");
 
 module.exports = {
   async checkAccountType() {
+    const accountId = this.provider.config.accountId;
     const zoneId = this.provider.config.zoneId;
     return await BB.bind(this)
       .then(this.checkAllEnvironmentVariables)
       .then(function() {
-        return cf.workers.getSettings({zoneId});
+        return cf.workers.getSettings({zoneId, accountId});
       })
       .then(this.checkIfMultiScript)
   },
