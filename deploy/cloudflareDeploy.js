@@ -38,30 +38,33 @@ class CloudflareDeploy {
 
     this.hooks = {
       "deploy:deploy": () =>
-        BB.bind(this)
-          .then(this.checkAccountType)
-          .then(async isMultiScript => {
-            this.serverless.cli.log('Starting Serverless Cloudflare-Worker deployment.');
-            if (isMultiScript && await duplicate.checkIfDuplicateRoutes(this.serverless, this.provider)) {
-              return BB.reject("Duplicate routes pointing to different script");
-            }
+      BB.bind(this)
+      .then(this.checkAccountType)
+      .then(async isMultiScript => {
+        this.serverless.cli.log('Starting Serverless Cloudflare-Worker deployment.');
+        if (isMultiScript && await duplicate.checkIfDuplicateRoutes(this.serverless, this.provider)) {
+          return BB.reject("Duplicate routes pointing to different script");
+        }
 
-            if (this.getInvalidScriptNames()) {
-              return BB.reject(
-                "Worker names can contain lowercase letters, numbers, underscores, and dashes. They cannot start with dashes."
-              );
-            }
+        if (this.getInvalidScriptNames()) {
+          return BB.reject(
+            "Worker names can contain lowercase letters, numbers, underscores, and dashes. They cannot start with dashes."
+          );
+        }
 
-            if (isMultiScript) {
-              return this.multiScriptDeployAll()
-            } else {
-              const functionObject = this.getFunctionObjectForSingleScript();
-              return this.deploySingleScript(functionObject);
-            }
-          })
-          .then(this.logDeployResponse)
-          .then(k => this.serverless.cli.log(`Finished deployment in ${(Date.now() - startTime) / 1000} seconds.`))
-          .then(k => this.serverless.cli.log('Finished Serverless Cloudflare-Worker deployment.'))
+        if (isMultiScript) {
+          return this.multiScriptDeployAll()
+        } else {
+          const functionObject = this.getFunctionObjectForSingleScript();
+          return this.deploySingleScript(functionObject);
+        }
+      })
+      .then(this.logDeployResponse)
+      .catch(error => {
+        return BB.reject(error.message);
+      }) 
+      .then(k => this.serverless.cli.log(`Finished deployment in ${(Date.now() - startTime) / 1000} seconds.`))
+      .then(k => this.serverless.cli.log('Finished Serverless Cloudflare-Worker deployment.'))
     };
   }
 }

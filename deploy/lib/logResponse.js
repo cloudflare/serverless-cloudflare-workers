@@ -22,8 +22,8 @@ module.exports = {
       this.aggregateWorkerResponse(this.serverless.cli, workerScriptResponse);
       this.aggregateRoutesResponse(this.serverless.cli, routesResponse);
     } else {
-      this.parseWorkerResponse(this.serverless.cli, workerScriptResponse);
-      this.parseRoutesResponse(this.serverless.cli, routesResponse);
+      this.aggregateWorkerResponse(this.serverless.cli, [workerScriptResponse]);
+      this.aggregateRoutesResponse(this.serverless.cli, [routesResponse]);
     }
   }
 };
