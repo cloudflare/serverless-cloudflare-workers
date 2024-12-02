@@ -17,7 +17,7 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 const sdk = require("../../provider/sdk");
-const { generateCode, generateWASM } = require("./workerScript");
+const { generateCode } = require("./workerScript");
 const BB = require("bluebird");
 const webpack = require("../../utils/webpack");
 const cf = require("cloudflare-workers-toolkit");
@@ -82,7 +82,6 @@ module.exports = {
         accountId: this.provider.config.accountId,
         zoneId,
         script: scriptContents,
-        wasm: generateWASM(functionObject),
         bindings
       });
 
@@ -99,7 +98,6 @@ module.exports = {
       }
 
       return {
-        namespaceResponse,
         workerScriptResponse,
         routesResponse,
         isMultiScript: false
